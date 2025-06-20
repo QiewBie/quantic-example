@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Grover's Algorithm - Quantum Lab</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-environment-component@1.3.0/dist/aframe-environment-component.min.js"></script>
+    <style>
+        .back-button {
+            position: absolute; top: 20px; left: 20px; z-index: 10; padding: 10px 20px;
+            font-size: 16px; background: rgba(0,0,0,0.5); color: white;
+            border: 2px solid #00ffff; border-radius: 5px; text-decoration: none;
+            font-family: monospace; transition: all 0.2s;
+        }
+        .back-button:hover { background: #00ffff; color: black; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← НАЗАД ДО ХАБУ</a>
+    
+    <a-scene 
+        raycaster="objects: .clickable" 
+        renderer="colorManagement: true;">
+
+        <a-assets>
+            <img id="table-metal" src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/assets/textures/metal/Metal_006_basecolor.jpg">
+            <a-audio id="click-sound" src="https://cdn.aframe.io/sound-effects/dist/click.mp3" preload="auto"></a-audio>
+            <a-audio id="flash-sound" src="https://cdn.aframe.io/sound-effects/dist/zap.mp3" preload="auto"></a-audio>
+        </a-assets>
+
+        <a-entity environment="preset: dream; skyType: atmosphere; ground: canyon; groundColor: #252525; groundColor2: #303030; dressing: none;"></a-entity>
+        <a-entity light="type: directional; castShadow: true; intensity: 0.6; position: -5 10 5;"></a-entity>
+
+        <a-camera position="0 1.6 5">
+            <a-cursor color="#00FFFF" fuse="false"></a-cursor>
+        </a-camera>
+
+        <a-entity id="experiment-setup" position="0 0 -2">
+            <a-cylinder id="lab-table" position="0 0.5 0" radius="2.5" height="1"
+                        material="src: #table-metal; roughness: 0.2; metalness: 0.8;" shadow="receive: true;"></a-cylinder>
+            
+            <a-entity id="grover-bars" position="0 1.05 0"></a-entity>
+        </a-entity>
+
+        <a-entity id="control-console" position="-3.5 1.0 -1">
+            <!-- ЄДИНА КНОПКА УПРАВЛІННЯ -->
+            <a-box class="clickable" id="action-button" position="0 0 0" color="#333" depth="0.2" height="0.4" width="1.2"
+                   material="metalness: 0.8; roughness: 0.3;" sound="on: click; src: #click-sound">
+                <a-text id="action-button-text" value="Next Step" color="#00ffff" position="0 0 0.11" align="center" width="2"></a-text>
+                <a-animation begin="click" attribute="scale" to="0.9 0.9 0.9" dur="100" dir="alternate"></a-animation>
+            </a-box>
+
+            <a-entity id="tooltip-panel" position="0 0.8 0">
+                 <a-plane width="2.5" height="1.2" color="#001a33" material="opacity: 0.7;"></a-plane>
+                 <a-text id="tooltip-text" value="System initialized in equal superposition state."
+                         color="#00ffff" width="2.3" position="0 0 0.01" align="center" wrap-count="35"></a-text>
+            </a-entity>
+        </a-entity>
+    </a-scene>
+
+<script>
+    const C = { add: (a, b) => ({ re: a.re + b.re, im: a.im + b.im }), mul: (a, b) => ({ re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re }), abs2: (a) => a.re * a.re + a.im * a.im, from: (re, im = 0) => ({ re, im })};
+    const C_ZERO = C.from(0);
+
+    document.querySelector('a-scene').addEventListener('loaded', function () {
+        const tooltipText = document.querySelector('#tooltip-text');
+        const actionBtn = document.querySelector('#action-button');
+        const actionBtnText = document.querySelector('#action-button-text');
+        const groverBars = document.querySelector('#grover-bars');
+        const sceneEl = document.querySelector('a-scene');
+        sceneEl.insertAdjacentHTML('beforeend', '<a-entity id="flash-sound-entity" sound="src: #flash-sound;"></a-entity>');
+        const flashSound = document.querySelector('#flash-sound-entity');
+
+        const N_GROVER = 8, OPTIMAL_STEPS = 4;
+        let TARGET_STATE, groverState, groverStep;
+        let barElements, currentHeights, targetHeights;
+        let isAnimating = false, animationFrameId;
+        const ANIMATION_SPEED = 0.1;
+        let isSimulationFinished = false;
+
+        const tutorialTexts = [
+            "Step 1: Oracle Operator.\nThe phase of the target state (green bar) is inverted to 'mark' it.",
+            "Step 2: Diffusion Operator.\nThe amplitudes are inverted about the mean, amplifying the 'marked' state's amplitude.",
+            "Step 3: Second Oracle Iteration.\nThe target is marked again to prepare for the final amplification.",
+            "Step 4: Final Diffusion.\nThe probability of measuring the target is now maximized.",
+            "Result: Optimal point reached.\nFurther iterations would cause 'over-rotation', decreasing the success probability. Press 'Reset' to run a new simulation."
+        ];
+
+        function setupNewSimulation() {
+            if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+            isAnimating = false;
+            groverBars.innerHTML = '';
+            barElements = []; currentHeights = []; targetHeights = [];
+            TARGET_STATE = Math.floor(Math.random() * N_GROVER);
+            groverState = Array(N_GROVER).fill(C.from(1 / Math.sqrt(N_GROVER)));
+            groverStep = 0;
+            const initialHeight = C.abs2(groverState[0]) * 3 + 0.05;
+            for (let i = 0; i < N_GROVER; i++) {
+                const bar = document.createElement('a-box');
+                const materialConfig = `shader: standard; color: ${i === TARGET_STATE ? '#2ecc71' : '#0077c2'}; emissive: ${i === TARGET_STATE ? '#2ecc71' : '#001a33'}; emissiveIntensity: 0.1; roughness: 0.4; metalness: 0.5`;
+                bar.setAttribute('position', `${(i - (N_GROVER - 1) / 2) * 0.4} ${initialHeight / 2} 0`);
+                bar.setAttribute('height', initialHeight);
+                bar.setAttribute('width', 0.3); bar.setAttribute('depth', 0.3);
+                bar.setAttribute('shadow', 'cast: true'); bar.setAttribute('material', materialConfig);
+                groverBars.appendChild(bar);
+                barElements.push(bar);
+                currentHeights.push(initialHeight); targetHeights.push(initialHeight);
+            }
+        }
+
+        function animateBars() { /* ... */ }
+        function startAnimation() { /* ... */ }
+        function flashTargetBar() { /* ... */ }
+
+        // --- ГОЛОВНИЙ ОБРОБНИК ПОДІЙ ДЛЯ ЄДИНОЇ КНОПКИ ---
+        actionBtn.addEventListener('click', () => {
+            if (isAnimating) return;
+
+            if (isSimulationFinished) {
+                // --- РЕЖИМ "RESET" ---
+                isSimulationFinished = false;
+                actionBtn.setAttribute('material', 'color', '#333');
+                actionBtnText.setAttribute('value', 'Next Step');
+                tooltipText.setAttribute('value', "System reset. New target selected. Ready to start.");
+                setupNewSimulation();
+            } else {
+                // --- РЕЖИМ "NEXT STEP" ---
+                if (groverStep >= OPTIMAL_STEPS) return;
+
+                tooltipText.setAttribute('value', tutorialTexts[groverStep]);
+
+                if (groverStep % 2 === 0) {
+                    groverState[TARGET_STATE] = C.mul(groverState[TARGET_STATE], C.from(-1));
+                } else {
+                    const mean = groverState.reduce((s, v) => C.add(s, v), C_ZERO);
+                    mean.re /= N_GROVER; mean.im /= N_GROVER;
+                    groverState = groverState.map(v => C.add(C.mul(C.from(2), mean), C.mul(C.from(-1), v)));
+                    flashTargetBar();
+                }
+                groverStep++;
+                startAnimation();
+                
+                if (groverStep === OPTIMAL_STEPS) {
+                    setTimeout(() => {
+                        isSimulationFinished = true;
+                        tooltipText.setAttribute('value', tutorialTexts[OPTIMAL_STEPS]);
+                        actionBtn.setAttribute('material', 'color', '#ffae42');
+                        actionBtnText.setAttribute('value', 'Reset');
+                    }, 10000);
+                }
+            }
+        });
+
+        setupNewSimulation(); // Запускаємо першу симуляцію
+        
+        function animateBars() { isAnimating = true; let allDone = true; for (let i = 0; i < N_GROVER; i++) { const diff = targetHeights[i] - currentHeights[i]; if (Math.abs(diff) > 0.001) { allDone = false; currentHeights[i] += diff * ANIMATION_SPEED; barElements[i].setAttribute('height', currentHeights[i]); barElements[i].object3D.position.y = currentHeights[i] / 2; } } if (allDone) { isAnimating = false; animationFrameId = null; } else { animationFrameId = requestAnimationFrame(animateBars); } }
+        function startAnimation() { for (let i = 0; i < N_GROVER; i++) { targetHeights[i] = C.abs2(groverState[i]) * 3 + 0.05; } if (!isAnimating) animateBars(); }
+        function flashTargetBar() { const targetBar = barElements[TARGET_STATE]; if (targetBar) { targetBar.setAttribute('animation__flash', { property: 'material.emissiveIntensity', to: 5, dur: 150, dir: 'alternate' }); flashSound.components.sound.playSound(); } }
+    });
+</script>
+</body>
+</html>
