@@ -91,11 +91,10 @@
         document.querySelector('a-scene').addEventListener('loaded', function () {
             loading.style.display = 'none';
             
-            const ui = { /* ... */ }; const sounds = { /* ... */ };
+            const ui = {  }; const sounds = {  };
             const config = { numPoints: 80, rotationStep: Math.PI / 12, animationDuration: 1200 };
             let data = [], theta = 0, phi = 0, isAnimating = false;
 
-            // --- ІНІЦІАЛІЗАЦІЯ ВСІХ ЕЛЕМЕНТІВ І ЗВУКІВ ---
             Object.assign(ui, { dataPointsContainer: document.querySelector('#data-points'), keyRingTheta: document.querySelector('#key-ring-theta'), keyRingPhi: document.querySelector('#key-ring-phi'), keyCore: document.querySelector('#key-core'), lockSphere: document.querySelector('#lock-sphere'), tuneThetaBtn: document.querySelector('#tune-theta-btn'), tunePhiBtn: document.querySelector('#tune-phi-btn'), resetBtn: document.querySelector('#reset-btn'), qualityText: document.querySelector('#quality-text'), paramsText: document.querySelector('#params-text') });
             Object.assign(sounds, { pulse: document.createElement('a-entity'), success: document.createElement('a-entity') });
             sounds.pulse.setAttribute('sound', 'src: #pulse-sound; volume: 0.3'); sounds.success.setAttribute('sound', 'src: #success-sound; volume: 0.5');
@@ -118,36 +117,27 @@
             }
             for (let i = 0; i < config.numPoints; i++) createDataPoint(i);
 
-            // --- НОВА, СПРОЩЕНА І ЧУТЛИВА ФУНКЦІЯ КЛАСИФІКАЦІЇ ---
             function quantumClassification(pos, theta, phi) {
-                // Ця функція створює "силове поле", яке залежить від кутів.
-                // Theta обертає поле, Phi змінює його "форму".
                 const r = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
                 const a = Math.atan2(pos.z, pos.x);
                 const classificationValue = r - (1.0 + 0.5 * Math.sin(a * 2 + theta) * Math.cos(phi));
                 return classificationValue;
             }
-
-            // --- НОВА, НАДІЙНА ЛОГІКА ОНОВЛЕННЯ З ПРОМІСАМИ ---
+  
             async function updateModel() {
                 if (isAnimating) return;
                 isAnimating = true;
 
                 ui.paramsText.setAttribute('value', `θ: ${(theta).toFixed(2)}, φ: ${(phi).toFixed(2)}`);
 
-                // Анімація кілець
                 const keyAnimation = new Promise(resolve => {
                     new TWEEN.Tween(ui.keyRingTheta.object3D.rotation).to({ y: theta }, 500).easing(TWEEN.Easing.Exponential.Out).onComplete(resolve).start();
                     new TWEEN.Tween(ui.keyRingPhi.object3D.rotation).to({ x: phi + Math.PI/2 }, 500).easing(TWEEN.Easing.Exponential.Out).start();
                 });
 
-                await keyAnimation; // Чекаємо завершення анімації ключа
-
-                // Анімація імпульсу
+                await keyAnimation;
                 sounds.pulse.components.sound.playSound();
-                // ... (Логіка імпульсу, можна додати)
 
-                // Анімація кластеризації частинок
                 const particleAnimations = data.map(point => {
                     return new Promise(resolve => {
                         const classification = quantumClassification(point.userData.initialPos, theta, phi);
@@ -159,9 +149,8 @@
                     });
                 });
                 
-                await Promise.all(particleAnimations); // Чекаємо, поки всі частинки долетять
+                await Promise.all(particleAnimations); 
 
-                // Оцінка якості після анімації
                 let correctCount = 0;
                 data.forEach(point => {
                     const currentRadius = Math.sqrt(point.object3D.position.x**2 + point.object3D.position.z**2);

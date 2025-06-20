@@ -56,14 +56,12 @@
         <a-cylinder id="quantum-channel" position="0 1 0" rotation="90 0 0" height="7" radius="0.1" 
                     material="color: #00ffff; opacity: 0.2; transparent: true;"></a-cylinder>
         
-        <!-- КВБИТ СФЕРА З ПУЛЬСАЦІЄЮ -->
         <a-sphere id="qubit-sphere" position="-3.5 1 0" radius="0.15" 
                   material="color: #FFF; metalness: 0.7; roughness: 0.1; emissive: #ffffff; emissiveIntensity: 0.3;" 
                   visible="false">
             <a-animation attribute="scale" to="1.2 1.2 1.2" dur="1000" dir="alternate" repeat="indefinite"></a-animation>
         </a-sphere>
 
-        <!-- ПРОГРЕС БАР -->
         <a-entity id="progress-bar" position="0 -0.5 0">
             <a-plane width="8" height="0.3" color="#222" material="opacity: 0.8"></a-plane>
             <a-plane id="progress-fill" width="0" height="0.25" color="#00ffff" position="-4 0 0.01"></a-plane>
@@ -87,7 +85,6 @@
     document.querySelector('a-scene').addEventListener('loaded', function () {
         console.log('BB84 Scene loaded');
         
-        // --- ІНІЦІАЛІЗАЦІЯ UI ЕЛЕМЕНТІВ ---
         const ui = {
             infoText: document.querySelector('#info-text'),
             actionBtn: document.querySelector('#action-button'),
@@ -102,7 +99,6 @@
             sounds: {}
         };
 
-        // --- ТЕКСТОВІ ПОВІДОМЛЕННЯ ---
         const tutorialTexts = {
             idle: "Goal: Alice needs to send a secret key to Bob. Quantum physics makes it secure. Press 'Start'.",
             ready: "Ready to send qubits. Alice will encode random bits using random polarization bases.",
@@ -113,7 +109,6 @@
             finished: (key, kept, total) => `Secure Key Generated!\nFinal key: "${key}"\nKept ${kept}/${total} bits where bases matched.\nPress 'Reset' for new simulation.`
         };
 
-        // --- ІНІЦІАЛІЗАЦІЯ ЗВУКІВ ---
         ['send', 'success', 'fail'].forEach(key => {
             const soundEntity = document.createElement('a-entity');
             soundEntity.setAttribute('sound', `src: #${key}-sound`);
@@ -121,7 +116,6 @@
             ui.sounds[key] = soundEntity;
         });
 
-        // --- ЗМІННІ СТАНУ ---
         let bb84Data = {
             step: 0,
             log: [],
@@ -133,7 +127,6 @@
             totalSteps: 8
         };
 
-        // --- ФУНКЦІЯ ІНІЦІАЛІЗАЦІЇ НОВОЇ СИМУЛЯЦІЇ ---
         function initializeSimulation() {
             console.log('Initializing new BB84 simulation');
             
@@ -150,7 +143,6 @@
 
             console.log('Generated data:', bb84Data);
 
-            // Очищення UI
             clearAllVisualizations();
             ui.infoText.setAttribute('value', tutorialTexts.idle);
             ui.actionBtnText.setAttribute('value', 'Start');
@@ -158,27 +150,22 @@
             ui.qubitSphere.setAttribute('visible', 'false');
             updateProgressBar(0);
             
-            // Очищення статусів
             ui.aliceStatus.setAttribute('value', '');
             ui.bobStatus.setAttribute('value', '');
         }
 
-        // --- ОЧИЩЕННЯ ВІЗУАЛІЗАЦІЙ ---
         function clearAllVisualizations() {
             ui.aliceBasisViz.innerHTML = '';
             ui.bobBasisViz.innerHTML = '';
             
-            // Повністю очищуємо всі анімації квбита
             ui.qubitSphere.removeAttribute('animation__move');
             ui.qubitSphere.removeAttribute('animation__fadeout');
             ui.qubitSphere.removeAttribute('animation');
             
-            // Повертаємо початкові властивості
             ui.qubitSphere.setAttribute('position', '-3.5 1 0');
             ui.qubitSphere.setAttribute('material', 'opacity', 1);
             ui.qubitSphere.setAttribute('visible', 'false');
             
-            // Відновлюємо базову анімацію пульсації
             setTimeout(() => {
                 ui.qubitSphere.setAttribute('animation', {
                     property: 'scale',
@@ -190,19 +177,16 @@
             }, 100);
         }
 
-        // --- МАЛЮВАННЯ БАЗИСУ ПОЛЯРИЗАЦІЇ ---
         function drawPolarizationBasis(container, basisType, color = '#FFF') {
             container.innerHTML = '';
             const basis = document.createElement('a-entity');
             
             if (basisType === 0) { 
-                // Прямолінійний базис (+ форма)
                 basis.innerHTML = `
                     <a-box color="${color}" width="0.8" height="0.1" depth="0.1"></a-box>
                     <a-box color="${color}" width="0.1" height="0.8" depth="0.1"></a-box>
                 `;
             } else { 
-                // Діагональний базис (X форма)
                 basis.innerHTML = `
                     <a-box color="${color}" width="0.8" height="0.1" depth="0.1" rotation="0 0 45"></a-box>
                     <a-box color="${color}" width="0.8" height="0.1" depth="0.1" rotation="0 0 -45"></a-box>
@@ -211,7 +195,6 @@
             container.appendChild(basis);
         }
 
-        // --- ОНОВЛЕННЯ ПРОГРЕС БАРУ ---
         function updateProgressBar(completed) {
             const progress = completed / bb84Data.totalSteps;
             const width = progress * 8;
@@ -220,7 +203,6 @@
             ui.progressText.setAttribute('value', `${completed}/${bb84Data.totalSteps} Qubits Sent`);
         }
 
-        // --- ПЕРЕДАЧА ОДНОГО КВБИТА ---
         function transmitSingleQubit() {
             if (bb84Data.isAnimating || bb84Data.step >= bb84Data.totalSteps) {
                 console.log('Cannot transmit - animating:', bb84Data.isAnimating, 'step:', bb84Data.step);
@@ -235,27 +217,22 @@
             
             console.log(`Transmitting qubit ${currentStep + 1}: bit=${currentBit}, Alice basis=${aliceBasis}, Bob basis=${bobBasis}`);
             
-            // Показуємо інформацію про передачу
             ui.infoText.setAttribute('value', tutorialTexts.sending(currentStep + 1, bb84Data.totalSteps));
             ui.aliceStatus.setAttribute('value', `Sending bit: ${currentBit}\nBasis: ${aliceBasis === 0 ? 'Rectilinear (+)' : 'Diagonal (×)'}`);
             
             // Показуємо базис Alice
             drawPolarizationBasis(ui.aliceBasisViz, aliceBasis, '#ffdd57');
             
-            // Очистити попередні анімації
             ui.qubitSphere.removeAttribute('animation__move');
             ui.qubitSphere.removeAttribute('animation__fadeout');
             
-            // Налаштовуємо квбит
             ui.qubitSphere.setAttribute('material', 'color', currentBit === 0 ? '#4dc3ff' : '#ffd700');
             ui.qubitSphere.setAttribute('material', 'emissive', currentBit === 0 ? '#4dc3ff' : '#ffd700');
             ui.qubitSphere.setAttribute('position', '-3.5 1 0');
             ui.qubitSphere.setAttribute('visible', 'true');
             
-            // Звук відправки
             ui.sounds.send.components.sound.playSound();
             
-            // Анімація руху квбита з унікальним ідентифікатором
             const animationId = `move_${Date.now()}`;
             ui.qubitSphere.setAttribute(`animation__${animationId}`, {
                 property: 'position',
@@ -264,17 +241,13 @@
                 easing: 'easeInOutQuad'
             });
             
-            // Через 2 секунди квбит досягає Bob
             setTimeout(() => {
-                // Bob отримує квбит і вимірює
                 ui.bobStatus.setAttribute('value', `Measuring...\nBasis: ${bobBasis === 0 ? 'Rectilinear (+)' : 'Diagonal (×)'}`);
                 drawPolarizationBasis(ui.bobBasisViz, bobBasis, '#48c774');
                 
-                // Визначаємо результат
                 const basesMatch = aliceBasis === bobBasis;
                 const measurementResult = basesMatch ? currentBit : Math.round(Math.random());
                 
-                // Зберігаємо результат
                 bb84Data.log.push({
                     bit: currentBit,
                     aliceBasis: aliceBasis,
@@ -292,19 +265,16 @@
                     result: measurementResult
                 });
                 
-                // Показуємо результат
                 setTimeout(() => {
                     ui.infoText.setAttribute('value', tutorialTexts.measuring(currentStep + 1, bb84Data.totalSteps, basesMatch, measurementResult));
                     ui.bobStatus.setAttribute('value', `Result: ${measurementResult}\nBases ${basesMatch ? 'MATCH ✓' : 'MISMATCH ✗'}`);
                     
-                    // Звуковий фідбек
                     if (basesMatch) {
                         ui.sounds.success.components.sound.playSound();
                     } else {
                         ui.sounds.fail.components.sound.playSound();
                     }
                     
-                    // Квбит зникає
                     const fadeId = `fade_${Date.now()}`;
                     ui.qubitSphere.setAttribute(`animation__${fadeId}`, {
                         property: 'material.opacity',
@@ -313,22 +283,18 @@
                     });
                     
                     setTimeout(() => {
-                        // Приховуємо квбит і скидаємо його стан
                         ui.qubitSphere.setAttribute('visible', 'false');
                         ui.qubitSphere.setAttribute('material', 'opacity', 1);
                         ui.qubitSphere.setAttribute('position', '-3.5 1 0');
                         
-                        // Очищуємо анімації
                         ui.qubitSphere.removeAttribute(`animation__${animationId}`);
                         ui.qubitSphere.removeAttribute(`animation__${fadeId}`);
                         
-                        // Оновлюємо прогрес
                         bb84Data.step++;
                         updateProgressBar(bb84Data.step);
                         
                         console.log(`Step completed. Current step: ${bb84Data.step}/${bb84Data.totalSteps}`);
                         
-                        // Перевіряємо чи закінчили
                         if (bb84Data.step >= bb84Data.totalSteps) {
                             bb84Data.state = 'ready_to_compare';
                             ui.actionBtnText.setAttribute('value', 'Compare Bases');
@@ -347,7 +313,6 @@
             }, 2000);
         }
 
-        // --- ПОРІВНЯННЯ БАЗИСІВ ТА СТВОРЕННЯ КЛЮЧА ---
         function performBasisComparison() {
             bb84Data.isAnimating = true;
             bb84Data.state = 'comparing';
@@ -358,12 +323,10 @@
             ui.actionBtnText.setAttribute('value', 'Processing...');
             ui.actionBtn.setAttribute('material', 'color', '#666');
             
-            // Очищуємо базиси і показуємо результати у вигляді барів
             clearAllVisualizations();
             ui.aliceStatus.setAttribute('value', 'Comparing bases...');
             ui.bobStatus.setAttribute('value', 'Comparing bases...');
             
-            // Створюємо візуалізацію результатів
             let finalKey = '';
             let matchCount = 0;
             
@@ -371,13 +334,11 @@
                 const barHeight = entry.match ? 1.2 : 0.4;
                 const barColor = entry.match ? '#2ecc71' : '#e74c3c';
                 
-                // Розраховуємо позицію для рівномірного розподілу
                 const totalBars = bb84Data.log.length;
-                const spacing = 2.5 / Math.max(totalBars - 1, 1); // Розподіляємо по ширині 2.5 одиниць
-                const startX = -1.25; // Починаємо з лівого краю
+                const spacing = 2.5 / Math.max(totalBars - 1, 1); 
+                const startX = -1.25; 
                 const xPos = startX + (i * spacing);
                 
-                // Бар для Alice
                 const aliceBar = document.createElement('a-box');
                 aliceBar.setAttribute('position', `${xPos} ${barHeight/2} 0`);
                 aliceBar.setAttribute('height', barHeight);
@@ -393,7 +354,6 @@
                 });
                 ui.aliceBasisViz.appendChild(aliceBar);
                 
-                // Бар для Bob з тією ж позицією
                 const bobBar = document.createElement('a-box');
                 bobBar.setAttribute('position', `${xPos} ${barHeight/2} 0`);
                 bobBar.setAttribute('height', barHeight);
@@ -409,7 +369,6 @@
                 });
                 ui.bobBasisViz.appendChild(bobBar);
                 
-                // Якщо базиси співпали, додаємо біт до ключа
                 if (entry.match) {
                     finalKey += entry.bit;
                     matchCount++;
@@ -418,7 +377,6 @@
             
             console.log(`Generated key: "${finalKey}", matches: ${matchCount}/${bb84Data.log.length}`);
             
-            // Через 3 секунди показуємо фінальний результат
             setTimeout(() => {
                 ui.infoText.setAttribute('value', tutorialTexts.finished(finalKey, matchCount, bb84Data.totalSteps));
                 ui.aliceStatus.setAttribute('value', `Final key: ${finalKey}`);
@@ -431,7 +389,6 @@
             }, Math.max(3000, bb84Data.log.length * 200 + 1000));
         }
 
-        // --- ОБРОБНИК НАТИСНЕННЯ КНОПКИ ---
         ui.actionBtn.addEventListener('click', () => {
             console.log(`Button clicked, state: ${bb84Data.state}, isAnimating: ${bb84Data.isAnimating}, step: ${bb84Data.step}`);
             
@@ -468,7 +425,6 @@
             }
         });
 
-        // --- ЗАПУСК ПОЧАТКОВОЇ СИМУЛЯЦІЇ ---
         initializeSimulation();
         console.log('BB84 simulation ready');
     });

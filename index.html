@@ -7,35 +7,73 @@
     <style>
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #282c34;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a2e; 
             color: white;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             text-align: center;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #16222A, #3A6073);
         }
         .hub-container {
-            max-width: 600px;
+            max-width: 800px;
             padding: 40px;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background-color: rgba(17, 17, 34, 0.5);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
         }
         h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            color: #00ffff; 
+            text-shadow: 0 0 10px #00ffff;
         }
         p {
             font-size: 1.2em;
             color: #bdc3c7;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
+
+        .description-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+            text-align: left;
+            font-size: 0.95em;
+        }
+        .description-block h3 {
+            margin-top: 0;
+            color: #00ffff;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.5);
+            padding-bottom: 5px;
+        }
+        .description-block ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            color: #d0d0e0;
+        }
+        .description-block li {
+            margin-bottom: 5px;
+        }
+        .description-block strong {
+            color: #f0932b; 
+        }
+        
         .button-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
+            margin-top: 20px;
         }
         .experiment-button {
             display: block;
@@ -44,28 +82,45 @@
             font-weight: bold;
             text-decoration: none;
             color: white;
-            background-color: #3498db;
+            background-color: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
             border-radius: 10px;
-            transition: transform 0.2s, background-color 0.2s;
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
         }
         .experiment-button:hover {
             transform: scale(1.05);
-            background-color: #2980b9;
+            background-color: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px #00ffff;
         }
-        .experiment-button.crypto { background-color: #e74c3c; }
-        .experiment-button.crypto:hover { background-color: #c0392b; }
-        .experiment-button.qml { background-color: #2ecc71; }
-        .experiment-button.qml:hover { background-color: #27ae60; }
     </style>
 </head>
 <body>
     <div class="hub-container">
-        <h1>Квантова Лабораторія</h1>
-        <p>Оберіть експеримент для запуску у віртуальному середовищі</p>
+        <h1>Інтерактивна Квантова Лабораторія</h1>
+        <p>WebXR-симулятор для візуалізації квантових алгоритмів, криптографії та машинного навчання.</p>
+
+        <div class="description-grid">
+            <div class="description-block">
+                <h3>🎯 Цільова Аудиторія</h3>
+                <ul>
+                    <li><strong>Студенти ВНЗ:</strong> Комп'ютерні науки, фізика, кібербезпека.</li>
+                    <li><strong>Учні старших класів:</strong> Поглиблене вивчення інформатики та фізики.</li>
+                </ul>
+            </div>
+            <div class="description-block">
+                <h3>🛠️ Технологічний Стек</h3>
+                <ul>
+                    <li><strong>JavaScript (ES6+):</strong> Основна мова логіки та інтерактивності.</li>
+                    <li><strong>A-Frame:</strong> WebXR-фреймворк для створення 3D/VR сцен.</li>
+                    <li><strong>TWEEN.js:</strong> Бібліотека для плавних та складних анімацій.</li>
+                </ul>
+            </div>
+        </div>
+        
         <div class="button-grid">
             <a href="grover.html" class="experiment-button">Експеримент 1: Алгоритм Гровера</a>
-            <a href="bb84.html" class="experiment-button crypto">Експеримент 2: Криптографія BB84</a>
-            <a href="qml.html" class="experiment-button qml">Експеримент 3: Квантове ML</a>
+            <a href="bb84.html" class="experiment-button">Експеримент 2: Криптографія BB84</a>
+            <a href="qml.html" class="experiment-button">Експеримент 3: Квантове ML</a>
         </div>
     </div>
 </body>

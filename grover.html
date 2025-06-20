@@ -42,7 +42,6 @@
         </a-entity>
 
         <a-entity id="control-console" position="-3.5 1.0 -1">
-            <!-- ЄДИНА КНОПКА УПРАВЛІННЯ -->
             <a-box class="clickable" id="action-button" position="0 0 0" color="#333" depth="0.2" height="0.4" width="1.2"
                    material="metalness: 0.8; roughness: 0.3;" sound="on: click; src: #click-sound">
                 <a-text id="action-button-text" value="Next Step" color="#00ffff" position="0 0 0.11" align="center" width="2"></a-text>
@@ -107,23 +106,20 @@
             }
         }
 
-        function animateBars() { /* ... */ }
-        function startAnimation() { /* ... */ }
-        function flashTargetBar() { /* ... */ }
+        function animateBars() {  }
+        function startAnimation() {  }
+        function flashTargetBar() {  }
 
-        // --- ГОЛОВНИЙ ОБРОБНИК ПОДІЙ ДЛЯ ЄДИНОЇ КНОПКИ ---
         actionBtn.addEventListener('click', () => {
             if (isAnimating) return;
 
             if (isSimulationFinished) {
-                // --- РЕЖИМ "RESET" ---
                 isSimulationFinished = false;
                 actionBtn.setAttribute('material', 'color', '#333');
                 actionBtnText.setAttribute('value', 'Next Step');
                 tooltipText.setAttribute('value', "System reset. New target selected. Ready to start.");
                 setupNewSimulation();
             } else {
-                // --- РЕЖИМ "NEXT STEP" ---
                 if (groverStep >= OPTIMAL_STEPS) return;
 
                 tooltipText.setAttribute('value', tutorialTexts[groverStep]);
@@ -150,7 +146,7 @@
             }
         });
 
-        setupNewSimulation(); // Запускаємо першу симуляцію
+        setupNewSimulation();
         
         function animateBars() { isAnimating = true; let allDone = true; for (let i = 0; i < N_GROVER; i++) { const diff = targetHeights[i] - currentHeights[i]; if (Math.abs(diff) > 0.001) { allDone = false; currentHeights[i] += diff * ANIMATION_SPEED; barElements[i].setAttribute('height', currentHeights[i]); barElements[i].object3D.position.y = currentHeights[i] / 2; } } if (allDone) { isAnimating = false; animationFrameId = null; } else { animationFrameId = requestAnimationFrame(animateBars); } }
         function startAnimation() { for (let i = 0; i < N_GROVER; i++) { targetHeights[i] = C.abs2(groverState[i]) * 3 + 0.05; } if (!isAnimating) animateBars(); }
