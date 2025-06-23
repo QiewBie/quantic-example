@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>A-Frame Сцена до п. 3.10 (з власним шрифтом та моделлю)</title>
+    <title>A-Frame Сцена</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
 </head>
 <body>
@@ -31,17 +31,16 @@
                 align="center">
         </a-text>
 
-        <!-- Зміни для ящика -->
+        
         <a-obj-model src="#crate-model-obj" mtl="#crate-model-mtl"
-                     position="3.5 1.2 -8"  <!-- Відсунули трохи правіше, вище і далі -->
-                     scale="1 1 1"        <!-- Тимчасово зменшили масштаб для оцінки -->
-                     rotation="0 30 0">     <!-- Трохи змінили обертання -->
+                     position="3.5 1.2 -8"
+                     scale="1 1 1"       
+                     rotation="0 30 0"> 
         </a-obj-model>
 
-        <!-- Зміни для світла -->
-        <a-light type="ambient" color="#888888"></a-light> <!-- Трохи яскравіше ambient -->
-        <a-light type="directional" color="#FFFFFF" intensity="1.2" position="-1 2 0.5"></a-light> <!-- Яскравіше і трохи інший напрямок -->
-        <a-light type="point" color="#FFFFFF" intensity="1.0" position="3 2 -6.5"></a-light> <!-- Ближче до ящика і яскравіше -->
+        <a-light type="ambient" color="#888888"></a-light>
+        <a-light type="directional" color="#FFFFFF" intensity="1.2" position="-1 2 0.5"></a-light>
+        <a-light type="point" color="#FFFFFF" intensity="1.0" position="3 2 -6.5"></a-light>
 
     </a-scene>
 </body>
