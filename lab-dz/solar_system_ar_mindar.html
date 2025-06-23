@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сонячна система у AR (MindAR)</title>
+    <!-- Підключення A-Frame -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <!-- Підключення MindAR для A-Frame Image Tracking -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body style='margin: 0; overflow: hidden;'>
+    <!--
+        Для MindAR атрибути сцени:
+        - mindar-image: основний компонент для image tracking.
+          imageTargetSrc: шлях до вашого .mind файлу.
+          maxTrack: скільки маркерів відстежувати одночасно (зазвичай 1 для простоти).
+          filterMinCF: мінімальний коефіцієнт впевненості для виявлення (0.001 - низький, чутливий).
+          filterBeta: параметр фільтрації (0.01 - низький, швидка реакція).
+        - embedded, vr-mode-ui="enabled: false", device-orientation-permission-ui="enabled: false": стандартні для AR.
+    -->
+    <a-scene mindar-image="imageTargetSrc: ./stars.mind; maxTrack: 1; filterMinCF:0.005; filterBeta: 0.05;"
+         embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
+         vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+
+        <a-assets timeout="5000">
+            <img id="sun_texture_ar" src="solar/sun.jpg" crossorigin="anonymous">
+            <img id="mercury_texture_ar" src="solar/mecury.jpg" crossorigin="anonymous">
+            <img id="venus_texture_ar" src="solar/venus.jpg" crossorigin="anonymous">
+            <img id="earth_texture_ar" src="solar/earth.jpg" crossorigin="anonymous">
+            <img id="mars_texture_ar" src="solar/mars.jpg" crossorigin="anonymous">
+            <img id="jupiter_texture_ar" src="solar/jupiter.jpg" crossorigin="anonymous">
+            <img id="saturn_texture_ar" src="solar/saturn.jpg" crossorigin="anonymous">
+            <img id="saturn_ring_texture_ar" src="solar/saturn_ring.png" crossorigin="anonymous">
+            <img id="uranus_texture_ar" src="solar/uranus.jpg" crossorigin="anonymous">
+            <img id="neptune_texture_ar" src="solar/neptune.jpg" crossorigin="anonymous">
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="far: ${customFields.libVersion >= 0.8 ? 10000 : 1000}; objects: .clickable"></a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0">
+            <a-sphere id="sun_ar" position="0 0 0" radius="0.2" material="src: #sun_texture_ar; emissive: #FFFF99; emissiveIntensity: 0.8" self-rotation="speed: 5">
+                 <a-light type="point" intensity="0.8" color="#FFFFAA" distance="3"></a-light> <!-- distance обмежує радіус дії світла -->
+            </a-sphere>
+
+            <a-sphere id="mercury_ar" radius="0.02" material="src: #mercury_texture_ar"
+                      orbit="radius: 0.35; speed: 0.4" self-rotation="speed: 10"></a-sphere>
+
+            <a-sphere id="venus_ar" radius="0.04" material="src: #venus_texture_ar"
+                      orbit="radius: 0.5; speed: 0.25" self-rotation="speed: 8"></a-sphere>
+
+            <a-sphere id="earth_ar" radius="0.045" material="src: #earth_texture_ar"
+                      orbit="radius: 0.7; speed: 0.2" self-rotation="speed: 15"></a-sphere>
+
+            <a-sphere id="mars_ar" radius="0.03" material="src: #mars_texture_ar"
+                      orbit="radius: 0.9; speed: 0.15" self-rotation="speed: 12"></a-sphere>
+
+            <a-sphere id="jupiter_ar" radius="0.12" material="src: #jupiter_texture_ar"
+                      orbit="radius: 1.3; speed: 0.08" self-rotation="speed: 5"></a-sphere>
+
+            <a-entity id="saturn-system_ar" orbit="radius: 1.7; speed: 0.05">
+                <a-sphere id="saturn_ar" radius="0.1" material="src: #saturn_texture_ar" self-rotation="speed: 6"></a-sphere>
+                <a-ring id="saturn-rings_ar" material="src: #saturn_ring_texture_ar; side: double; transparent: true; opacity:0.7"
+                        radius-inner="0.12" radius-outer="0.22" rotation="90 0 0" segments-theta="64">
+                </a-ring>
+            </a-entity>
+
+            <a-sphere id="uranus_ar" radius="0.07" material="src: #uranus_texture_ar"
+                      orbit="radius: 2.0; speed: 0.03" self-rotation="speed: 7"></a-sphere>
+
+            <a-sphere id="neptune_ar" radius="0.065" material="src: #neptune_texture_ar"
+                      orbit="radius: 2.3; speed: 0.02" self-rotation="speed: 9"></a-sphere>
+
+        </a-entity>
+        
+        <a-light type="ambient" color="#555555"></a-light>
+        <a-light type="directional" color="white" intensity="0.5" position="1 2 1"></a-light>
+
+    </a-scene>
+    <script>
+        AFRAME.registerComponent('orbit', {
+            schema: {
+                speed: { type: 'number', default: 0.1 },
+                radius: { type: 'number', default: 1 },
+                axis: {type: 'string', default: 'y'}
+            },
+            init: function () { this.angle = 0; },
+            tick: function (time, timeDelta) {
+                this.angle += this.data.speed * (timeDelta / 1000);
+                let x = this.data.radius * Math.cos(this.angle);
+                let z = this.data.radius * Math.sin(this.angle);
+                 if (this.data.axis === 'y') {
+                    this.el.setAttribute('position', { x: x, y: this.el.object3D.position.y, z: z });
+                } else if (this.data.axis === 'x') {
+                     this.el.setAttribute('position', { x: this.el.object3D.position.x, y: x, z: z });
+                } else {
+                     this.el.setAttribute('position', { x: x, y: z, z: this.el.object3D.position.z });
+                }
+            }
+        });
+        AFRAME.registerComponent('self-rotation', {
+            schema: { speed: { type: 'number', default: 10 } },
+            tick: function (time, timeDelta) {
+                this.el.object3D.rotation.y += THREE.MathUtils.degToRad(this.data.speed * (timeDelta / 1000));
+            }
+        });
+    </script>
+</body>
+</html>

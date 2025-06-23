@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Сонячна система у VR (A-Frame)</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script>
+        AFRAME.registerComponent('orbit', {
+            schema: {
+                speed: { type: 'number', default: 0.1 },
+                radius: { type: 'number', default: 1 },
+                axis: {type: 'string', default: 'y'} 
+            },
+            init: function () {
+                this.angle = 0;
+            },
+            tick: function (time, timeDelta) {
+                this.angle += this.data.speed * (timeDelta / 1000);
+                let x = this.data.radius * Math.cos(this.angle);
+                let z = this.data.radius * Math.sin(this.angle);
+                if (this.data.axis === 'y') {
+                    this.el.setAttribute('position', { x: x, y: this.el.object3D.position.y, z: z });
+                } else if (this.data.axis === 'x') {
+                     this.el.setAttribute('position', { x: this.el.object3D.position.x, y: x, z: z });
+                } else { // z axis
+                     this.el.setAttribute('position', { x: x, y: z, z: this.el.object3D.position.z });
+                }
+            }
+        });
+
+        AFRAME.registerComponent('self-rotation', {
+            schema: {
+                speed: { type: 'number', default: 10 }
+            },
+            tick: function (time, timeDelta) {
+                this.el.object3D.rotation.y += THREE.MathUtils.degToRad(this.data.speed * (timeDelta / 1000));
+            }
+        });
+    </script>
+</head>
+<body>
+    <a-scene background="color: #111122">
+
+        <a-assets>
+            <img id="sun_texture" src="solar/sun.jpg" crossorigin="anonymous">
+            <img id="mercury_texture" src="solar/mecury.jpg" crossorigin="anonymous">
+            <img id="venus_texture" src="solar/venus.jpg" crossorigin="anonymous">
+            <img id="earth_texture" src="solar/earth.jpg" crossorigin="anonymous">
+            <img id="mars_texture" src="solar/mars.jpg" crossorigin="anonymous">
+            <img id="jupiter_texture" src="solar/jupiter.jpg" crossorigin="anonymous">
+            <img id="saturn_texture" src="solar/saturn.jpg" crossorigin="anonymous">
+            <img id="saturn_ring_texture" src="solar/saturn_ring.png" crossorigin="anonymous">
+            <img id="uranus_texture" src="solar/uranus.jpg" crossorigin="anonymous">
+            <img id="neptune_texture" src="solar/neptune.jpg" crossorigin="anonymous">
+        </a-assets>
+
+        <a-entity position="0 2 15" camera look-controls wasd-controls="fly: true; acceleration: 30"></a-entity>
+
+        <a-sphere id="sun" position="0 0 0" radius="2" material="src: #sun_texture; emissive: #FFFF99; emissiveIntensity: 0.8" self-rotation="speed: 5">
+            <a-light type="point" intensity="1.5" color="#FFFFAA"></a-light>
+        </a-sphere>
+
+        <a-sphere id="mercury" radius="0.2" material="src: #mercury_texture"
+                  orbit="radius: 3.5; speed: 0.4" self-rotation="speed: 10"></a-sphere>
+
+        <a-sphere id="venus" radius="0.4" material="src: #venus_texture"
+                  orbit="radius: 5; speed: 0.25" self-rotation="speed: 8"></a-sphere>
+
+        <a-sphere id="earth" radius="0.45" material="src: #earth_texture"
+                  orbit="radius: 7; speed: 0.2" self-rotation="speed: 15"></a-sphere>
+
+        <a-sphere id="mars" radius="0.3" material="src: #mars_texture"
+                  orbit="radius: 9; speed: 0.15" self-rotation="speed: 12"></a-sphere>
+
+        <a-sphere id="jupiter" radius="1.2" material="src: #jupiter_texture"
+                  orbit="radius: 13; speed: 0.08" self-rotation="speed: 5"></a-sphere>
+
+        <a-entity id="saturn-system" orbit="radius: 17; speed: 0.05">
+            <a-sphere id="saturn" radius="1" material="src: #saturn_texture" self-rotation="speed: 6"></a-sphere>
+            <a-ring id="saturn-rings" material="src: #saturn_ring_texture; side: double; transparent: true; opacity:0.7"
+                    radius-inner="1.2" radius-outer="2.2" rotation="90 0 0" segments-theta="64">
+            </a-ring>
+        </a-entity>
+
+        <a-sphere id="uranus" radius="0.7" material="src: #uranus_texture"
+                  orbit="radius: 20; speed: 0.03" self-rotation="speed: 7"></a-sphere>
+
+        <a-sphere id="neptune" radius="0.65" material="src: #neptune_texture"
+                  orbit="radius: 23; speed: 0.02" self-rotation="speed: 9"></a-sphere>
+
+    </a-scene>
+</body>
+</html>
